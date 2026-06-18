@@ -1,0 +1,42 @@
+version: "3.9"
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: finops-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+    # AMD ROCm: uncomment these two lines when running on AMD GPU
+    # devices:
+    #   - /dev/kfd:/dev/kfd
+    #   - /dev/dri:/dev/dri
+
+  api:
+    build: .
+    container_name: finops-api
+    command: uvicorn api:app --host 0.0.0.0 --port 8000 --reload
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+    env_file: .env
+    depends_on:
+      - ollama
+
+  swarm:
+    build: .
+    container_name: finops-swarm
+    command: python main.py
+    volumes:
+      - ./data:/app/data
+    env_file: .env
+    depends_on:
+      - ollama
+      - api
+
+volumes:
+  ollama_data:

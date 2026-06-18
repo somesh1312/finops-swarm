@@ -1,0 +1,20 @@
+
+.env
+agent_config.yaml
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+dist/
+
+# Database
+data/finops.db
+
+# Mac
+.DS_Store
+
+# Virtual env
+.venv/
+venv/

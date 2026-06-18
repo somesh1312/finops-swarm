@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FinOps Swarm — CFO Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c0f;
+    --surface: #111419;
+    --surface2: #181c22;
+    --border: rgba(255,255,255,0.07);
+    --border-strong: rgba(255,255,255,0.13);
+    --text: #e8eaed;
+    --text-muted: #6b7280;
+    --text-dim: #374151;
+    --amber: #f59e0b;
+    --amber-dim: rgba(245,158,11,0.12);
+    --amber-border: rgba(245,158,11,0.25);
+    --red: #ef4444;
+    --red-dim: rgba(239,68,68,0.1);
+    --red-border: rgba(239,68,68,0.22);
+    --green: #10b981;
+    --green-dim: rgba(16,185,129,0.1);
+    --green-border: rgba(16,185,129,0.22);
+    --blue: #3b82f6;
+    --blue-dim: rgba(59,130,246,0.1);
+    --blue-border: rgba(59,130,246,0.2);
+    --font-display: 'DM Serif Display', Georgia, serif;
+    --font-body: 'Instrument Sans', sans-serif;
+    --font-mono: 'DM Mono', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* Header */
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    background: rgba(10,12,15,0.92);
+    backdrop-filter: blur(12px);
+    z-index: 100;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo-mark {
+    width: 28px; height: 28px;
+    background: var(--amber);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .logo-mark svg { width: 16px; height: 16px; }
+
+  .logo-text {
+    font-family: var(--font-display);
+    font-size: 17px;
+    letter-spacing: -0.01em;
+    color: var(--text);
+  }
+
+  .logo-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    letter-spacing: 0.04em;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .live-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-family: var(--font-mono);
+    color: var(--green);
+    letter-spacing: 0.06em;
+  }
+
+  .live-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+
+  .last-refresh {
+    font-size: 11px;
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+  }
+
+  /* Layout */
+  main {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+
+  /* Page title area */
+  .page-header {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .page-title {
+    font-family: var(--font-display);
+    font-size: 28px;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  .page-subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  /* Stat bar */
+  .stat-bar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 2rem;
+  }
+
+  .stat {
+    background: var(--surface);
+    padding: 1.1rem 1.4rem;
+  }
+
+  .stat-label {
+    font-size: 11px;
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .stat-value {
+    font-family: var(--font-display);
+    font-size: 26px;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+
+  .stat-value.red { color: var(--red); }
+  .stat-value.amber { color: var(--amber); }
+  .stat-value.green { color: var(--green); }
+  .stat-value.white { color: var(--text); }
+
+  .stat-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  /* Section header */
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+  }
+
+  .section-title {
+    font-size: 11px;
+    font-family: var(--font-mono);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .section-count {
+    font-size: 11px;
+    font-family: var(--font-mono);
+    color: var(--text-dim);
+  }
+
+  /* Escalation cards */
+  .cards {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+    animation: slideIn 0.4s ease both;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .card:hover { border-color: var(--border-strong); }
+
+  .card.escalated { border-left: 3px solid var(--red); }
+  .card.pending { border-left: 3px solid var(--amber); }
+  .card.approved { border-left: 3px solid var(--green); opacity: 0.6; }
+  .card.flagged { border-left: 3px solid var(--blue); opacity: 0.7; }
+
+  .card-header {
+    padding: 1.1rem 1.4rem;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    cursor: pointer;
+  }
+
+  .card-header-left {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    flex: 1;
+  }
+
+  .severity-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-family: var(--font-mono);
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+    margin-top: 2px;
+  }
+
+  .severity-badge.high {
+    background: var(--red-dim);
+    color: var(--red);
+    border: 1px solid var(--red-border);
+  }
+
+  .severity-badge.medium {
+    background: var(--amber-dim);
+    color: var(--amber);
+    border: 1px solid var(--amber-border);
+  }
+
+  .severity-badge.resolved {
+    background: var(--green-dim);
+    color: var(--green);
+    border: 1px solid var(--green-border);
+  }
+
+  .severity-badge.flagged-badge {
+    background: var(--blue-dim);
+    color: var(--blue);
+    border: 1px solid var(--blue-border);
+  }
+
+  .card-title-group { flex: 1; }
+
+  .card-co-id {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 3px;
+  }
+
+  .card-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+
+  .card-meta {
+    display: flex;
+    gap: 16px;
+    margin-top: 6px;
+  }
+
+  .card-meta-item {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+  }
+
+  .card-meta-item span {
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  .card-expand-icon {
+    color: var(--text-muted);
+    transition: transform 0.2s;
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
+
+  .card.expanded .card-expand-icon {
+    transform: rotate(180deg);
+  }
+
+  /* Card body (expanded) */
+  .card-body {
+    display: none;
+    border-top: 1px solid var(--border);
+  }
+
+  .card.expanded .card-body { display: block; }
+
+  /* Numbers comparison */
+  .numbers-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .number-cell {
+    background: var(--surface2);
+    padding: 1rem 1.4rem;
+  }
+
+  .number-label {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .number-value {
+    font-family: var(--font-display);
+    font-size: 20px;
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+
+  .number-value.mismatch { color: var(--red); }
+  .number-value.ok { color: var(--green); }
+
+  .number-system {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    font-family: var(--font-mono);
+    margin-top: 4px;
+  }
+
+  .system-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+  }
+
+  .system-dot.synced { background: var(--green); }
+  .system-dot.unsynced { background: var(--red); }
+
+  /* Narrative */
+  .narrative-section {
+    padding: 1.2rem 1.4rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .narrative-label {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .ai-tag {
+    background: var(--amber-dim);
+    color: var(--amber);
+    border: 1px solid var(--amber-border);
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 9px;
+    letter-spacing: 0.05em;
+  }
+
+  .narrative-text {
+    font-size: 13px;
+    line-height: 1.7;
+    color: #c9cdd4;
+    font-style: italic;
+    border-left: 2px solid var(--border-strong);
+    padding-left: 12px;
+  }
+
+  /* Sync status */
+  .sync-section {
+    padding: 1rem 1.4rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: 2rem;
+  }
+
+  .sync-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-family: var(--font-mono);
+  }
+
+  .sync-icon {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px;
+    flex-shrink: 0;
+  }
+
+  .sync-icon.ok { background: var(--green-dim); color: var(--green); border: 1px solid var(--green-border); }
+  .sync-icon.fail { background: var(--red-dim); color: var(--red); border: 1px solid var(--red-border); }
+
+  /* Actions */
+  .actions-section {
+    padding: 1rem 1.4rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .actions-left {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+  }
+
+  .actions-right {
+    display: flex;
+    gap: 8px;
+  }
+
+  .btn {
+    padding: 7px 16px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-family: var(--font-body);
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.15s;
+    letter-spacing: 0.01em;
+  }
+
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .btn-approve {
+    background: var(--green-dim);
+    color: var(--green);
+    border-color: var(--green-border);
+  }
+  .btn-approve:hover:not(:disabled) {
+    background: rgba(16,185,129,0.18);
+  }
+
+  .btn-flag {
+    background: var(--blue-dim);
+    color: var(--blue);
+    border-color: var(--blue-border);
+  }
+  .btn-flag:hover:not(:disabled) {
+    background: rgba(59,130,246,0.16);
+  }
+
+  /* Band room audit trail */
+  .audit-section {
+    margin-top: 2.5rem;
+  }
+
+  .audit-trail {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .audit-header {
+    padding: 0.9rem 1.4rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .audit-title {
+    font-size: 11px;
+    font-family: var(--font-mono);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .audit-list {
+    max-height: 320px;
+    overflow-y: auto;
+    padding: 0.5rem 0;
+  }
+
+  .audit-list::-webkit-scrollbar { width: 4px; }
+  .audit-list::-webkit-scrollbar-track { background: transparent; }
+  .audit-list::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 2px; }
+
+  .audit-event {
+    padding: 0.6rem 1.4rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    border-bottom: 1px solid var(--border);
+    animation: fadeIn 0.3s ease both;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .audit-event:last-child { border-bottom: none; }
+
+  .audit-time {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--text-dim);
+    white-space: nowrap;
+    min-width: 60px;
+    padding-top: 1px;
+  }
+
+  .audit-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    margin-top: 5px;
+    flex-shrink: 0;
+  }
+
+  .audit-content { flex: 1; }
+
+  .audit-agent {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+    margin-bottom: 1px;
+  }
+
+  .audit-event-type {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--text-muted);
+  }
+
+  .empty-icon {
+    font-size: 32px;
+    margin-bottom: 12px;
+    opacity: 0.4;
+  }
+
+  .empty-title {
+    font-family: var(--font-display);
+    font-size: 18px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+
+  .empty-sub {
+    font-size: 12px;
+    font-family: var(--font-mono);
+    color: var(--text-dim);
+  }
+
+  /* Loading */
+  .loading {
+    display: inline-block;
+    width: 10px; height: 10px;
+    border: 1.5px solid var(--border-strong);
+    border-top-color: var(--amber);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    vertical-align: middle;
+    margin-left: 6px;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--surface2);
+    border: 1px solid var(--border-strong);
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-size: 13px;
+    font-family: var(--font-mono);
+    color: var(--text);
+    z-index: 999;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: all 0.2s;
+    pointer-events: none;
+  }
+
+  .toast.show { opacity: 1; transform: translateY(0); }
+  .toast.green { border-color: var(--green-border); color: var(--green); }
+  .toast.blue { border-color: var(--blue-border); color: var(--blue); }
+
+  /* API offline banner */
+  .offline-banner {
+    background: var(--amber-dim);
+    border-bottom: 1px solid var(--amber-border);
+    padding: 8px 2rem;
+    font-size: 12px;
+    font-family: var(--font-mono);
+    color: var(--amber);
+    display: none;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .offline-banner.show { display: flex; }
+
+  /* Variance indicator */
+  .variance-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-family: var(--font-mono);
+    font-weight: 500;
+  }
+
+  .variance-chip.over { background: var(--red-dim); color: var(--red); border: 1px solid var(--red-border); }
+  .variance-chip.ok { background: var(--green-dim); color: var(--green); border: 1px solid var(--green-border); }
+</style>
+</head>
+<body>
+
+<div class="offline-banner" id="offlineBanner">
+  ⚠ API server offline — run <code style="background:rgba(0,0,0,0.3);padding:1px 6px;border-radius:3px;">uvicorn api:app --reload --port 8000</code> to connect live data
+</div>
+
+<header>
+  <div class="logo">
+    <div class="logo-mark">
+      <svg viewBox="0 0 16 16" fill="none" stroke="#0a0c0f" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M2 12L6 8L9 11L14 5"/>
+        <circle cx="14" cy="5" r="1.5" fill="#0a0c0f" stroke="none"/>
+      </svg>
+    </div>
+    <div>
+      <div class="logo-text">FinOps Swarm</div>
+      <div class="logo-sub">RECONCILIATION COMMAND</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="live-badge">
+      <div class="live-dot"></div>
+      LIVE
+    </div>
+    <div class="last-refresh" id="lastRefresh">—</div>
+  </div>
+</header>
+
+<main>
+  <div class="page-header">
+    <h1 class="page-title">Financial Reconciliation</h1>
+    <p class="page-subtitle" id="pageSubtitle">Loading agent data...</p>
+  </div>
+
+  <!-- Stat bar -->
+  <div class="stat-bar">
+    <div class="stat">
+      <div class="stat-label">Pending Review</div>
+      <div class="stat-value red" id="statPending">—</div>
+      <div class="stat-sub">requires decision</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Total Exposure</div>
+      <div class="stat-value amber" id="statExposure">—</div>
+      <div class="stat-sub">unreconciled variance</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Resolved Today</div>
+      <div class="stat-value green" id="statResolved">—</div>
+      <div class="stat-sub">approved or flagged</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Agent Events</div>
+      <div class="stat-value white" id="statEvents">—</div>
+      <div class="stat-sub">in Band room</div>
+    </div>
+  </div>
+
+  <!-- Escalation cards -->
+  <div class="section-header">
+    <div class="section-title">Escalations requiring decision</div>
+    <div class="section-count" id="cardCount">—</div>
+  </div>
+
+  <div class="cards" id="cardsContainer">
+    <div class="empty-state">
+      <div class="empty-icon">◎</div>
+      <div class="empty-title">Waiting for agents</div>
+      <div class="empty-sub">Run python main.py to start the swarm</div>
+    </div>
+  </div>
+
+  <!-- Band room audit trail -->
+  <div class="audit-section">
+    <div class="section-header">
+      <div class="section-title">Band room — agent event log</div>
+      <div class="section-count" id="auditCount">—</div>
+    </div>
+    <div class="audit-trail">
+      <div class="audit-list" id="auditList">
+        <div style="padding:2rem;text-align:center;font-family:var(--font-mono);font-size:12px;color:var(--text-dim);">
+          No events yet
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = 'http://localhost:8000';
+let allEscalations = [];
+let resolvedIds = new Set();
+let isOffline = false;
+
+const EVENT_COLORS = {
+  ChangeOrderApproved:  { color: '#f59e0b', label: 'Change order detected' },
+  ActualsChecked:       { color: '#3b82f6', label: 'Mainframe ERP checked' },
+  BudgetImpact:         { color: '#8b5cf6', label: 'TM1 budget assessed' },
+  NarrativeReady:       { color: '#06b6d4', label: 'Narrative generated' },
+  EscalationRequested:  { color: '#ef4444', label: 'Escalation raised' },
+};
+
+function fmt(n) {
+  if (n === undefined || n === null) return '—';
+  return '$' + Math.abs(n).toLocaleString('en-US', { maximumFractionDigits: 0 });
+}
+
+function fmtPct(n) {
+  return (Math.round(n * 100) / 100).toFixed(2) + '%';
+}
+
+function fmtTime(ts) {
+  if (!ts) return '—';
+  const d = new Date(ts * 1000);
+  return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (type ? ' ' + type : '');
+  setTimeout(() => { t.className = 'toast'; }, 3000);
+}
+
+function getSeverity(e) {
+  if (e.status === 'approved') return { label: 'APPROVED', cls: 'resolved' };
+  if (e.status === 'flagged') return { label: 'FLAGGED', cls: 'flagged-badge' };
+  if (e.request.variance_pct > 5) return { label: 'HIGH RISK', cls: 'high' };
+  return { label: 'REVIEW', cls: 'medium' };
+}
+
+function getCardClass(e) {
+  if (e.status === 'approved') return 'approved';
+  if (e.status === 'flagged') return 'flagged';
+  if (e.request.variance_pct > 5) return 'escalated';
+  return 'pending';
+}
+
+function buildCard(e) {
+  const sev = getSeverity(e);
+  const cardCls = getCardClass(e);
+  const isPending = e.status === 'pending';
+  const r = e.request;
+
+  const mainframeOk = r.actuals_absorbed;
+  const tm1Ok = r.tm1_reflected;
+
+  return `
+  <div class="card ${cardCls}" id="card-${e.id}">
+    <div class="card-header" onclick="toggleCard('${e.id}')">
+      <div class="card-header-left">
+        <span class="severity-badge ${sev.cls}">${sev.label}</span>
+        <div class="card-title-group">
+          <div class="card-co-id">${r.co_id} · ${r.project_code}</div>
+          <div class="card-title">
+            ${r.co_id === 'CO-2024-047' ? 'Offshore Platform Alpha — Phase 2' :
+              r.co_id === 'CO-2024-051' ? 'Onshore Pipeline Extension — West' :
+              r.project_code}
+          </div>
+          <div class="card-meta">
+            <div class="card-meta-item">Variance <span class="variance-chip over">${fmtPct(r.variance_pct)}</span></div>
+            <div class="card-meta-item">Delta <span>${fmt(r.budget_after - r.budget_before)}</span></div>
+            <div class="card-meta-item">Budget <span>${fmt(r.budget_before)} → ${fmt(r.budget_after)}</span></div>
+          </div>
+        </div>
+      </div>
+      <svg class="card-expand-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M4 6l4 4 4-4"/>
+      </svg>
+    </div>
+
+    <div class="card-body">
+      <div class="numbers-grid">
+        <div class="number-cell">
+          <div class="number-label">Budget baseline</div>
+          <div class="number-value ok">${fmt(r.budget_before)}</div>
+          <div class="number-system"><span class="system-dot synced"></span><span style="color:var(--text-muted)">TM1 before CO</span></div>
+        </div>
+        <div class="number-cell">
+          <div class="number-label">Committed cost (ERP)</div>
+          <div class="number-value ${mainframeOk ? 'ok' : 'mismatch'}">${fmt(r.budget_before + (r.actuals_absorbed ? 0 : r.variance_amount * 0.06))}</div>
+          <div class="number-system">
+            <span class="system-dot ${mainframeOk ? 'synced' : 'unsynced'}"></span>
+            <span style="color:var(--text-muted)">Mainframe ${mainframeOk ? '✓ absorbed' : '✗ not updated'}</span>
+          </div>
+        </div>
+        <div class="number-cell">
+          <div class="number-label">Budget after CO</div>
+          <div class="number-value ${tm1Ok ? 'ok' : 'mismatch'}">${fmt(r.budget_after)}</div>
+          <div class="number-system">
+            <span class="system-dot ${tm1Ok ? 'synced' : 'unsynced'}"></span>
+            <span style="color:var(--text-muted)">TM1 ${tm1Ok ? '✓ reflected' : '✗ not updated'}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="narrative-section">
+        <div class="narrative-label">
+          Agent narrative <span class="ai-tag">AMD · LOCAL LLM</span>
+        </div>
+        <div class="narrative-text">${r.narrative_summary}</div>
+      </div>
+
+      <div class="sync-section">
+        <div class="sync-item">
+          <div class="sync-icon ${mainframeOk ? 'ok' : 'fail'}">${mainframeOk ? '✓' : '✗'}</div>
+          Mainframe ERP ${mainframeOk ? 'absorbed CO' : 'NOT updated'}
+        </div>
+        <div class="sync-item">
+          <div class="sync-icon ${tm1Ok ? 'ok' : 'fail'}">${tm1Ok ? '✓' : '✗'}</div>
+          TM1 budget model ${tm1Ok ? 'reflected' : 'NOT updated'}
+        </div>
+      </div>
+
+      <div class="actions-section">
+        <div class="actions-left">${r.recommended_action}</div>
+        <div class="actions-right">
+          ${isPending ? `
+            <button class="btn btn-flag" onclick="resolve('${e.id}', 'flag')">Flag for review</button>
+            <button class="btn btn-approve" onclick="resolve('${e.id}', 'approve')">Approve reforecast</button>
+          ` : `
+            <span style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);">
+              ${e.status.toUpperCase()} by ${e.resolved_by || 'finance-controller'}
+            </span>
+          `}
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function toggleCard(id) {
+  const card = document.getElementById('card-' + id);
+  card.classList.toggle('expanded');
+}
+
+async function resolve(id, action) {
+  const btns = document.querySelectorAll(`#card-${id} .btn`);
+  btns.forEach(b => b.disabled = true);
+  try {
+    const res = await fetch(`${API}/escalations/${id}/${action}`, { method: 'POST' });
+    if (res.ok) {
+      showToast(action === 'approve' ? '✓ Reforecast approved' : '⚑ Flagged for review',
+                action === 'approve' ? 'green' : 'blue');
+      await refresh();
+    }
+  } catch {
+    btns.forEach(b => b.disabled = false);
+    showToast('API unreachable');
+  }
+}
+
+function buildAuditEvent(ev, i) {
+  const meta = EVENT_COLORS[ev.event_type] || { color: '#6b7280', label: ev.event_type };
+  return `
+    <div class="audit-event" style="animation-delay:${i * 0.03}s">
+      <div class="audit-time">${fmtTime(ev.timestamp)}</div>
+      <div class="audit-dot" style="background:${meta.color}"></div>
+      <div class="audit-content">
+        <div class="audit-agent">${ev.agent}</div>
+        <div class="audit-event-type">${meta.label}</div>
+      </div>
+    </div>`;
+}
+
+async function refresh() {
+  try {
+    const [escRes, roomRes] = await Promise.all([
+      fetch(`${API}/escalations`),
+      fetch(`${API}/room/events`),
+    ]);
+
+    if (isOffline) {
+      isOffline = false;
+      document.getElementById('offlineBanner').classList.remove('show');
+    }
+
+    const escalations = await escRes.json();
+    const roomData = await roomRes.json();
+
+    allEscalations = escalations;
+
+    // Stats
+    const pending = escalations.filter(e => e.status === 'pending').length;
+    const resolved = escalations.filter(e => e.status !== 'pending').length;
+    const exposure = escalations
+      .filter(e => e.status === 'pending')
+      .reduce((s, e) => s + Math.abs(e.request.variance_amount || 0), 0);
+
+    document.getElementById('statPending').textContent = pending;
+    document.getElementById('statExposure').textContent = fmt(exposure);
+    document.getElementById('statResolved').textContent = resolved;
+    document.getElementById('statEvents').textContent = roomData.event_count;
+    document.getElementById('cardCount').textContent = escalations.length + ' total';
+    document.getElementById('lastRefresh').textContent =
+      new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    document.getElementById('pageSubtitle').textContent =
+      `${pending} escalation${pending !== 1 ? 's' : ''} pending decision · ${roomData.event_count} agent events in Band room`;
+
+    // Cards
+    const container = document.getElementById('cardsContainer');
+    if (escalations.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">◎</div>
+          <div class="empty-title">No escalations yet</div>
+          <div class="empty-sub">Run python main.py — agents will populate this view</div>
+        </div>`;
+    } else {
+      const expanded = new Set(
+        [...document.querySelectorAll('.card.expanded')].map(c => c.id.replace('card-', ''))
+      );
+      container.innerHTML = escalations.map(buildCard).join('');
+      expanded.forEach(id => {
+        const card = document.getElementById('card-' + id);
+        if (card) card.classList.add('expanded');
+      });
+    }
+
+    // Audit trail
+    const events = roomData.events || [];
+    const auditList = document.getElementById('auditList');
+    document.getElementById('auditCount').textContent = events.length + ' events';
+    if (events.length === 0) {
+      auditList.innerHTML = `<div style="padding:2rem;text-align:center;font-family:var(--font-mono);font-size:12px;color:var(--text-dim);">No events yet — run main.py</div>`;
+    } else {
+      const reversed = [...events].reverse();
+      auditList.innerHTML = reversed.map((ev, i) => buildAuditEvent(ev, i)).join('');
+    }
+
+  } catch {
+    if (!isOffline) {
+      isOffline = true;
+      document.getElementById('offlineBanner').classList.add('show');
+    }
+    document.getElementById('lastRefresh').textContent = 'offline';
+    document.getElementById('pageSubtitle').textContent =
+      'API server not running — start uvicorn to connect';
+  }
+}
+
+// Poll every 3 seconds
+refresh();
+setInterval(refresh, 3000);
+</script>
+</body>
+</html>
